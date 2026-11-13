@@ -49,12 +49,14 @@ consistent from one upload to the next.
 - [x] pytest suite
 
 ### Phase 2: Cost data and pricing engine
-- [ ] Cost tables: panel × damage type × severity → operations and labor hours
-- [ ] Parts prices by vehicle tier, regional labor rates, paint materials
-- [ ] Repair-vs-replace rules, blending of adjacent panels
-- [ ] VIN decoding via NHTSA vPIC
-- [ ] `POST /api/estimate` returning an itemized low–high estimate
-- [ ] `docs/cost-data.md` with sources for every number
+- [x] Cost book (`ontario.toml`): labour rates, paint and shop materials, parts, hours, sublet prices
+- [x] Rules: damage type × severity × panel → polish, paintless repair, repair, replace or sublet
+- [x] Refinish with overlap deductions, blending of neighbouring panels
+- [x] Luxury and vehicle-size pricing, driver-assist sensor calibration
+- [x] VIN decoding via NHTSA vPIC, postal code → province
+- [x] `POST /api/estimate` (photo → itemized low–high estimate with HST)
+- [x] `POST /api/price` (re-price damage the user edited) and `GET /api/vehicles/{vin}`
+- [x] `docs/cost-data.md` with sources, plus calibration tests against published prices
 
 ### Phase 3: Frontend
 - [ ] Next.js + TypeScript + Tailwind
@@ -69,6 +71,7 @@ consistent from one upload to the next.
 ### Phase 5: Deploy and polish
 - [ ] Dockerfile, backend on Render or Fly.io, frontend on Vercel
 - [ ] Per-IP rate limiting, daily spend cap, cache results by image hash
+- [ ] Save estimates (SQLite locally, Postgres when deployed) with shareable links
 - [ ] README with demo GIF, architecture diagram and live link
 
 ### Stretch

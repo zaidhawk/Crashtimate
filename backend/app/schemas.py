@@ -122,17 +122,3 @@ class DamageReport(BaseModel):
         description="Two or three sentences for the car owner, including any suspected hidden "
         "damage that cannot be confirmed from the photo."
     )
-
-
-class AnalysisMeta(BaseModel):
-    detector: str
-    model: str | None
-    image_sha256: str
-    image_width: int
-    image_height: int
-    elapsed_ms: int
-
-
-class AnalyzeResponse(BaseModel):
-    report: DamageReport
-    meta: AnalysisMeta

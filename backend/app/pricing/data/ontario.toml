@@ -1,0 +1,204 @@
+# Crashtimate cost book for Ontario. Money is CAD before tax.
+#
+# docs/cost-data.md lists the source for every number. Values marked "assumption"
+# have no public source; tests/test_pricing_calibration.py checks that the estimates
+# they produce land inside published repair-cost ranges.
+
+currency = "CAD"
+region = "Ontario"
+tax_name = "HST"
+tax_rate = 0.13
+
+# Makes priced at luxury rates. Assumption: shops publish separate luxury rates
+# (AWIN names Mercedes-Benz, Jaguar, Land Rover and luxury EVs) but no full list.
+luxury_makes = [
+  "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Cadillac", "Ferrari",
+  "Jaguar", "Lamborghini", "Land Rover", "Lexus", "Lotus", "Lucid", "Maserati",
+  "McLaren", "Mercedes-Benz", "Polestar", "Porsche", "Rivian", "Rolls-Royce",
+  "Tesla", "Volvo",
+]
+
+# Blending a neighbouring panel so the colour matches. Estimating systems charge 50%
+# of the panel's refinish time; an SCRS study found blends take longer than a full
+# refinish, so the high end charges 100%.
+blend_fraction = [0.5, 1.0]
+
+# Paint hours taken off a panel painted next to another painted panel, since they
+# share masking and setup. Common estimating-guide convention.
+overlap_hours = 0.4
+
+# Posted door rates of Ontario collision shops, 2024–2025.
+[rates.standard]
+body_labour = [85, 105]        # $ per hour
+refinish_labour = [85, 105]    # $ per hour
+paint_materials = [48, 53]     # $ per paint hour
+shop_materials = [10, 15]      # $ per body hour
+parts_multiplier = 1.0
+lamp_parts_multiplier = 1.0
+
+[rates.luxury]
+body_labour = [100, 135]
+refinish_labour = [100, 135]
+paint_materials = [60, 63]
+shop_materials = [15, 20]
+parts_multiplier = 2.0         # assumption
+lamp_parts_multiplier = 3.0    # calibrated to luxury headlight quotes reported in Ontario
+
+# Bigger vehicles have bigger panels: more paint time and dearer parts. Assumption.
+[size_multipliers]
+car = 1.0
+suv = 1.15
+truck = 1.25
+
+# Body labour hours to fix damage in place, by panel size and severity. Assumption.
+[repair_hours.small]
+minor = [0.3, 0.6]
+moderate = [0.8, 1.5]
+severe = [1.5, 2.5]
+
+[repair_hours.medium]
+minor = [0.5, 1.0]
+moderate = [1.5, 3.0]
+severe = [3.0, 5.0]
+
+[repair_hours.large]
+minor = [0.8, 1.5]
+moderate = [2.0, 4.0]
+severe = [4.0, 7.0]
+
+# Body labour hours to buff out light scratches. Assumption.
+[polish_hours]
+small = [0.3, 0.5]
+medium = [0.5, 1.0]
+large = [0.8, 1.5]
+
+# Flat prices for work done by specialists.
+[sublet]
+windshield_chip_repair = [50, 120]   # assumption
+lens_restoration = [60, 150]         # assumption
+mirror_glass = [60, 200]             # assumption
+tire_repair = [30, 60]
+tire_replace = [150, 330]            # one tire, mounted and balanced
+wheel_cosmetic_repair = [100, 200]
+wheel_straighten = [100, 250]
+sensor_calibration = [200, 500]
+
+[sublet.paintless_dent_repair]
+small = [75, 175]
+medium = [125, 300]
+large = [150, 400]
+
+# Panel types. Hours are labour hours; prices are for a mainstream car such as a
+# 2019 Honda Civic (low: certified aftermarket part, high: dealer part).
+[panel_types.hood]
+category = "body"
+size = "large"
+refinish_hours = 3.0
+replace_hours = [0.8, 1.5]
+part_price = [300, 1100]
+
+[panel_types.roof]
+category = "body"
+size = "large"
+refinish_hours = 3.0
+replace_hours = [12.0, 20.0]
+part_price = [400, 1200]
+welded = true
+
+[panel_types.trunk]
+category = "body"
+size = "medium"
+refinish_hours = 2.5
+replace_hours = [1.0, 2.0]
+part_price = [300, 900]
+
+[panel_types.front_fender]
+category = "body"
+size = "medium"
+refinish_hours = 2.2
+replace_hours = [1.5, 2.5]
+part_price = [120, 350]
+
+[panel_types.front_door]
+category = "body"
+size = "medium"
+refinish_hours = 2.6
+replace_hours = [3.0, 4.5]
+part_price = [400, 1200]
+
+[panel_types.rear_door]
+category = "body"
+size = "medium"
+refinish_hours = 2.4
+replace_hours = [3.0, 4.5]
+part_price = [400, 1200]
+
+[panel_types.quarter_panel]
+category = "body"
+size = "large"
+refinish_hours = 3.0
+replace_hours = [10.0, 16.0]
+part_price = [250, 900]
+welded = true
+
+[panel_types.rocker]
+category = "body"
+size = "small"
+refinish_hours = 1.0
+replace_hours = [5.0, 9.0]
+part_price = [100, 400]
+welded = true
+
+[panel_types.front_bumper]
+category = "bumper"
+size = "medium"
+refinish_hours = 2.8
+replace_hours = [2.0, 3.5]   # includes moving grilles, brackets and sensors to the new cover
+part_price = [250, 750]
+
+[panel_types.rear_bumper]
+category = "bumper"
+size = "medium"
+refinish_hours = 2.8
+replace_hours = [2.0, 3.5]
+part_price = [250, 750]
+
+[panel_types.mirror]
+category = "mirror"
+size = "small"
+refinish_hours = 0.5
+replace_hours = [0.5, 1.0]
+part_price = [120, 800]
+
+[panel_types.grille]
+category = "grille"
+size = "small"
+replace_hours = [0.3, 0.8]
+part_price = [100, 450]
+
+[panel_types.headlight]
+category = "lamp"
+replace_hours = [0.5, 2.0]   # some cars need the bumper removed first
+part_price = [200, 1200]
+
+[panel_types.taillight]
+category = "lamp"
+replace_hours = [0.3, 0.8]
+part_price = [100, 600]
+
+[panel_types.windshield]
+category = "glass"
+replace_price = [300, 800]
+
+[panel_types.rear_window]
+category = "glass"
+replace_price = [300, 700]
+
+[panel_types.side_glass]
+category = "glass"
+replace_price = [200, 450]
+
+[panel_types.wheel]
+category = "wheel"
+replace_hours = [0.5, 1.0]   # swap the tire over, mount and balance
+part_price = [200, 800]

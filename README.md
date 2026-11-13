@@ -4,16 +4,34 @@ Upload a photo of a damaged car and get an itemized repair estimate.
 
 A vision model describes the damage (which panel, what kind, how bad) as structured JSON.
 A deterministic pricing engine then prices it the way body shop estimating software does:
-labor operations, regional labor rates, parts and paint materials.
+repair, replace, refinish and blend operations in labour hours, Ontario shop rates, parts,
+paint materials and specialist work, all as low–high ranges with HST.
 
-> **Status:** Phase 1 of 5. The backend detects damage; pricing, the web app and the
+> **Status:** Phase 2 of 5. The backend detects and prices damage; the web app and the
 > accuracy evaluation are next. See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## How it works
+
+- **Detection:** Claude reads the photo and returns a validated damage report: panels,
+  damage types and severity, plus boxes marking where the damage is. A mock detector
+  lets tests and CI run without an API key.
+- **Pricing rules:** each damage becomes an operation. Light scratches are polished, small
+  dents get paintless repair, moderate damage is repaired and repainted, and severe damage
+  is replaced. Damage on the same panel is combined. Repainted panels share setup time, and
+  neighbouring panels are blended so the colour matches.
+- **Vehicle data:** an optional VIN is decoded through NHTSA's vPIC API. Luxury makes get
+  luxury shop rates and parts prices, SUVs and trucks get bigger panels, and cars with
+  lane cameras or radar get sensor calibration after nearby repairs.
+- **Sourced numbers:** rates come from posted Ontario shop rate sheets, and every other
+  number has a source or is marked as an assumption in
+  [docs/cost-data.md](docs/cost-data.md). Calibration tests check estimates against
+  published repair prices.
 
 ## Stack
 
-- **Backend:** Python 3.12, FastAPI, Pydantic, Pillow
-- **Vision:** Claude (Anthropic API) with structured outputs, behind a `DamageDetector`
-  interface, plus a mock detector so tests and CI run without an API key
+- **Backend:** Python 3.12, FastAPI, Pydantic, Pillow, httpx
+- **Vision:** Claude (Anthropic API) with structured outputs
+- **Data:** cost book in TOML, validated on startup
 - **Tooling:** pytest, ruff, GitHub Actions
 
 ## Run the backend
@@ -27,7 +45,7 @@ cp .env.example .env            # set CRASHTIMATE_DETECTOR=claude and ANTHROPIC_
 uvicorn app.main:app --reload
 ```
 
-Open http://localhost:8000/docs to try `POST /api/analyze` with a photo.
+Open http://localhost:8000/docs to try the API.
 
 ## Test
 
@@ -39,7 +57,14 @@ ruff check . && ruff format --check .
 
 ## API
 
-`POST /api/analyze` (multipart, field `image`: JPEG, PNG or WebP up to 10 MB)
+| Endpoint | What it does |
+|---|---|
+| `POST /api/estimate` | Photo (plus optional `vin` and `postal_code`) → damage report and itemized estimate |
+| `POST /api/price` | JSON list of damage (plus optional VIN and postal code) → estimate. Used to re-price after the user corrects the detected damage, without another photo analysis. |
+| `POST /api/analyze` | Photo → damage report only |
+| `GET /api/vehicles/{vin}` | Year, make, model, body class and driver-assist features |
+
+A trimmed `POST /api/estimate` response:
 
 ```json
 {
@@ -59,14 +84,42 @@ ruff check . && ruff format --check .
     ],
     "summary": "The front left corner took a moderate impact..."
   },
-  "meta": {
-    "detector": "claude",
-    "model": "claude-opus-5-5",
-    "image_sha256": "…",
-    "image_width": 1568,
-    "image_height": 1045,
-    "elapsed_ms": 5400
-  }
+  "estimate": {
+    "currency": "CAD",
+    "region": "Ontario",
+    "vehicle": { "year": 2019, "make": "HONDA", "model": "Civic", "tier": "standard", "size": "car" },
+    "lines": [
+      {
+        "panel": "left_front_fender",
+        "operation": "repair",
+        "description": "Repair the left front fender (moderate dent)",
+        "body_hours": { "low": 1.5, "high": 3.0 },
+        "cost": { "low": 143, "high": 360 }
+      },
+      {
+        "panel": "left_front_fender",
+        "operation": "refinish",
+        "description": "Refinish the left front fender",
+        "refinish_hours": { "low": 2.2, "high": 2.2 },
+        "cost": { "low": 293, "high": 348 }
+      },
+      {
+        "panel": "hood",
+        "operation": "blend",
+        "description": "Blend the hood to match the new paint",
+        "refinish_hours": { "low": 1.5, "high": 3.0 },
+        "cost": { "low": 200, "high": 474 }
+      }
+    ],
+    "totals": {
+      "subtotal": { "low": 1103, "high": 3152 },
+      "tax": { "low": 143, "high": 410 },
+      "total": { "low": 1246, "high": 3562 }
+    },
+    "unpriced": [],
+    "notes": ["This is an estimate to help you plan, not a quote. ..."]
+  },
+  "meta": { "detector": "claude", "model": "claude-opus-5-5", "elapsed_ms": 5400 }
 }
 ```
 

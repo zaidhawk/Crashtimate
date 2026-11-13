@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.vehicles import VPIC_DECODE_URL
+
 ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
@@ -25,6 +27,9 @@ class Settings(BaseSettings):
 
     max_upload_mb: float = 10
     max_image_edge: int = 1568
+
+    vpic_url: str = VPIC_DECODE_URL
+    vin_lookup_timeout_seconds: float = 10
 
     cors_origins: list[str] = ["http://localhost:3000"]
 

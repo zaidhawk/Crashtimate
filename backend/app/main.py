@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
 import httpx
 from fastapi import FastAPI
@@ -9,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import router
 from app.config import Settings, get_settings
 from app.detectors import DamageDetector, build_detector
+from app.limits import RateLimiter
 from app.pricing import CostBook, load_cost_book
+from app.store import Store
 from app.vehicles import VinDecoder
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -33,14 +36,19 @@ def create_app(
             app.state.vin_decoder = vin_decoder or VinDecoder(
                 http, cost_book.luxury_makes, settings.vpic_url
             )
+            app.state.store = Store(settings.database_path)
+            app.state.store.purge(timedelta(days=settings.retention_days))
             try:
                 yield
             finally:
+                app.state.store.close()
                 await app.state.detector.aclose()
 
-    app = FastAPI(title="Crashtimate API", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="Crashtimate API", version="0.3.0", lifespan=lifespan)
     app.state.settings = settings
     app.state.cost_book = cost_book
+    app.state.analysis_limiter = RateLimiter(settings.rate_limit_per_hour, 3600)
+    app.state.share_limiter = RateLimiter(settings.share_rate_limit_per_hour, 3600)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

@@ -8,6 +8,7 @@ from tests.conftest import make_image
 
 class FailingDetector:
     name = "failing"
+    cache_key = "failing"
 
     def __init__(self, retryable: bool):
         self.retryable = retryable

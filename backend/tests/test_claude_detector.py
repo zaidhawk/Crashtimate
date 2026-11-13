@@ -43,7 +43,12 @@ class FakeClient:
 
 
 def response(stop_reason="end_turn", parsed_output=SAMPLE_REPORT, model="claude-opus-5-5"):
-    return SimpleNamespace(stop_reason=stop_reason, parsed_output=parsed_output, model=model)
+    return SimpleNamespace(
+        stop_reason=stop_reason,
+        parsed_output=parsed_output,
+        model=model,
+        usage=SimpleNamespace(input_tokens=1800, output_tokens=450),
+    )
 
 
 def api_error(cls, status_code: int):
@@ -76,6 +81,14 @@ def test_sends_the_photo_and_returns_the_parsed_report():
     assert image_block["source"]["media_type"] == "image/jpeg"
     assert base64.standard_b64decode(image_block["source"]["data"]) == image.data
     assert text_block["type"] == "text"
+
+
+def test_reports_token_usage_and_a_cache_key_tied_to_the_settings():
+    detection, _ = run_detect(FakeMessages(response()))
+    detector = ClaudeDamageDetector(FakeClient(FakeMessages()), model="m", effort="high")
+
+    assert (detection.input_tokens, detection.output_tokens) == (1800, 450)
+    assert detector.cache_key == "claude:m:high"
 
 
 def test_reports_the_model_that_actually_answered():

@@ -32,10 +32,10 @@ class CountingDetector(MockDamageDetector):
         return await super().detect(image)
 
 
-def post_estimate(client, **form):
+def post_estimate(client, images=None, **form):
     return client.post(
         "/api/estimate",
-        files={"image": ("car.jpg", make_image(), "image/jpeg")},
+        files=[("images", ("car.jpg", image, "image/jpeg")) for image in images or [make_image()]],
         data={key: value for key, value in form.items() if value is not None},
     )
 
@@ -55,8 +55,8 @@ def test_estimate_prices_the_detected_damage_for_the_vin(make_client):
     panels = {line["panel"] for line in estimate["lines"]}
     assert {"left_front_fender", "front_bumper", "left_headlight"} <= panels
     assert estimate["totals"]["total"]["low"] > 0
-    assert body["report"]["damages"]
-    assert body["meta"]["detector"] == "mock"
+    assert len(body["damages"]) == 3
+    assert body["photos"][0]["meta"]["detector"] == "mock"
 
 
 def test_estimate_without_a_vin_prices_a_typical_car(client):
@@ -121,7 +121,9 @@ def test_no_estimate_when_the_photo_is_not_a_vehicle(make_client):
     body = post_estimate(client).json()
 
     assert body["estimate"] is None
-    assert body["report"]["is_vehicle"] is False
+    assert body["damages"] == []
+    assert body["summary"] == "This photo shows a dog, not a vehicle."
+    assert body["photos"][0]["report"]["is_vehicle"] is False
 
 
 def test_price_endpoint_prices_edited_damage(client):

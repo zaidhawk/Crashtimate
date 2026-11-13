@@ -27,6 +27,20 @@ class Settings(BaseSettings):
 
     max_upload_mb: float = 10
     max_image_edge: int = 1568
+    max_photos: int = 4
+
+    # SQLite file holding cached analyses and saved estimates.
+    database_path: str = str(ENV_FILE.parent / "crashtimate.db")
+    # Photos, analyses and saved estimates are deleted after this many days.
+    retention_days: int = 30
+
+    # Photo analyses one visitor may request per hour, and saved estimates per hour. 0 = no limit.
+    rate_limit_per_hour: int = 30
+    share_rate_limit_per_hour: int = 60
+    # Paid analyses allowed per day across all visitors, to cap spending. 0 = no limit.
+    daily_analysis_limit: int = 200
+    # Number of reverse proxies in front of the app (1 on Render or Fly.io, 0 locally).
+    proxy_hops: int = 0
 
     vpic_url: str = VPIC_DECODE_URL
     vin_lookup_timeout_seconds: float = 10

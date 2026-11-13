@@ -26,7 +26,9 @@ def make_image(
 
 def mock_settings(**overrides) -> Settings:
     """Settings that ignore the developer's local .env file."""
-    return Settings(_env_file=None, **{"detector": "mock", **overrides})
+    return Settings(
+        _env_file=None, **{"detector": "mock", "database_path": ":memory:", **overrides}
+    )
 
 
 class FakeVinDecoder:

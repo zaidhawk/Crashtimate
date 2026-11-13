@@ -25,6 +25,7 @@ class ClaudeDamageDetector:
         self._client = client
         self._model = model
         self._effort = effort
+        self.cache_key = f"claude:{model}:{effort}"
 
     async def detect(self, image: PreparedImage) -> Detection:
         image_b64 = base64.standard_b64encode(image.data).decode("ascii")
@@ -78,7 +79,13 @@ class ClaudeDamageDetector:
         if response.parsed_output is None:
             raise DetectionError("The damage analysis came back empty.")
 
-        return Detection(report=response.parsed_output, model=response.model)
+        usage = getattr(response, "usage", None)
+        return Detection(
+            report=response.parsed_output,
+            model=response.model,
+            input_tokens=getattr(usage, "input_tokens", None),
+            output_tokens=getattr(usage, "output_tokens", None),
+        )
 
     async def aclose(self) -> None:
         await self._client.close()

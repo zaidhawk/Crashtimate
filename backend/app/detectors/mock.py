@@ -53,6 +53,7 @@ class MockDamageDetector:
     """Returns the same sample report for every photo. Used in tests and frontend work."""
 
     name = "mock"
+    cache_key = "mock"
 
     async def detect(self, image: PreparedImage) -> Detection:
         return Detection(report=SAMPLE_REPORT, model=None)

@@ -24,6 +24,8 @@ next-env.d.ts
 
 # Local data
 *.db
+*.db-shm
+*.db-wal
 *.sqlite3
 eval/images/
 eval/results/*.jsonl

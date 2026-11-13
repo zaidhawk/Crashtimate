@@ -1,0 +1,1529 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Crashtimate API",
+    "version": "0.3.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analyze": {
+      "post": {
+        "summary": "Analyze",
+        "description": "Detect visible damage in one photo of a vehicle.",
+        "operationId": "analyze_api_analyze_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_analyze_api_analyze_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/estimate": {
+      "post": {
+        "summary": "Estimate",
+        "description": "Detect damage in photos of one vehicle and price the repairs.",
+        "operationId": "estimate_api_estimate_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_estimate_api_estimate_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstimateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/price": {
+      "post": {
+        "summary": "Price",
+        "description": "Price a list of damage without a photo, e.g. after the user corrects the detector.",
+        "operationId": "price_api_price_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicles/{vin}": {
+      "get": {
+        "summary": "Decode Vin",
+        "description": "Look up a vehicle by VIN.",
+        "operationId": "decode_vin_api_vehicles__vin__get",
+        "parameters": [
+          {
+            "name": "vin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Vin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shares": {
+      "post": {
+        "summary": "Create Share",
+        "description": "Save an estimate so it can be opened again from a link.\n\nThe client sends the damage (possibly corrected by the user), not prices. The server\nprices it again, so a saved estimate always shows numbers this app calculated.",
+        "operationId": "create_share_api_shares_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shares/{share_id}": {
+      "get": {
+        "summary": "Get Share",
+        "operationId": "get_share_api_shares__share_id__get",
+        "parameters": [
+          {
+            "name": "share_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Share Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedEstimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/shares/{share_id}/photos/{position}": {
+      "get": {
+        "summary": "Get Share Photo",
+        "operationId": "get_share_photo_api_shares__share_id__photos__position__get",
+        "parameters": [
+          {
+            "name": "share_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Share Id"
+            }
+          },
+          {
+            "name": "position",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Position"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisMeta": {
+        "properties": {
+          "detector": {
+            "type": "string",
+            "title": "Detector"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "image_sha256": {
+            "type": "string",
+            "title": "Image Sha256"
+          },
+          "image_width": {
+            "type": "integer",
+            "title": "Image Width"
+          },
+          "image_height": {
+            "type": "integer",
+            "title": "Image Height"
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "title": "Elapsed Ms"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "True if this exact photo was analysed before."
+          }
+        },
+        "type": "object",
+        "required": [
+          "detector",
+          "model",
+          "image_sha256",
+          "image_width",
+          "image_height",
+          "elapsed_ms",
+          "cached"
+        ],
+        "title": "AnalysisMeta"
+      },
+      "AnalyzeResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/DamageReport"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AnalysisMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report",
+          "meta"
+        ],
+        "title": "AnalyzeResponse"
+      },
+      "BodySize": {
+        "type": "string",
+        "enum": [
+          "car",
+          "suv",
+          "truck"
+        ],
+        "title": "BodySize"
+      },
+      "Body_analyze_api_analyze_post": {
+        "properties": {
+          "image": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Image",
+            "description": "Photo of the vehicle: JPEG, PNG or WebP."
+          }
+        },
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "title": "Body_analyze_api_analyze_post"
+      },
+      "Body_estimate_api_estimate_post": {
+        "properties": {
+          "images": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Images",
+            "description": "One or more photos of the same vehicle: JPEG, PNG or WebP."
+          },
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "vehicle_size": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BodySize"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vehicle_tier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VehicleTier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "images"
+        ],
+        "title": "Body_estimate_api_estimate_post"
+      },
+      "BoundingBox": {
+        "properties": {
+          "x_min": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "X Min"
+          },
+          "y_min": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Y Min"
+          },
+          "x_max": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "X Max"
+          },
+          "y_max": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Y Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x_min",
+          "y_min",
+          "x_max",
+          "y_max"
+        ],
+        "title": "BoundingBox",
+        "description": "Damage location as fractions of the image size (0 = left/top edge, 1 = right/bottom)."
+      },
+      "CostRange": {
+        "properties": {
+          "low": {
+            "type": "integer",
+            "title": "Low"
+          },
+          "high": {
+            "type": "integer",
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "low",
+          "high"
+        ],
+        "title": "CostRange",
+        "description": "Whole dollars."
+      },
+      "DamageInput": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "damage_type": {
+            "$ref": "#/components/schemas/DamageType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "damage_type",
+          "severity"
+        ],
+        "title": "DamageInput",
+        "description": "One piece of damage to price. The detector's DamageItem carries the same fields."
+      },
+      "DamageItem": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "damage_type": {
+            "$ref": "#/components/schemas/DamageType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "One short sentence describing the damage."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "How sure you are this damage is real and correctly classified."
+          },
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the damage is, or null if unclear."
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "damage_type",
+          "severity",
+          "description",
+          "confidence",
+          "box"
+        ],
+        "title": "DamageItem"
+      },
+      "DamageReport": {
+        "properties": {
+          "is_vehicle": {
+            "type": "boolean",
+            "title": "Is Vehicle",
+            "description": "False if the photo does not show a vehicle."
+          },
+          "image_quality": {
+            "$ref": "#/components/schemas/ImageQuality",
+            "description": "unusable if too dark, blurry or distant to assess damage."
+          },
+          "view": {
+            "$ref": "#/components/schemas/ViewAngle",
+            "description": "Which side of the vehicle the photo shows."
+          },
+          "damages": {
+            "items": {
+              "$ref": "#/components/schemas/DamageItem"
+            },
+            "type": "array",
+            "title": "Damages",
+            "description": "One entry per damaged panel per damage type. Empty if no visible damage."
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "Two or three sentences for the car owner, including any suspected hidden damage that cannot be confirmed from the photo."
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_vehicle",
+          "image_quality",
+          "view",
+          "damages",
+          "summary"
+        ],
+        "title": "DamageReport"
+      },
+      "DamageType": {
+        "type": "string",
+        "enum": [
+          "dent",
+          "scratch",
+          "crack",
+          "glass_shatter",
+          "lamp_broken",
+          "tire_flat"
+        ],
+        "title": "DamageType",
+        "description": "Matches the six categories of the CarDD dataset so the eval set can score it directly."
+      },
+      "DetectedDamage": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "damage_type": {
+            "$ref": "#/components/schemas/DamageType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "One short sentence describing the damage."
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "How sure you are this damage is real and correctly classified."
+          },
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the damage is, or null if unclear."
+          },
+          "photo": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Photo",
+            "description": "Which photo shows it (index into photos).",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "damage_type",
+          "severity",
+          "description",
+          "confidence",
+          "box"
+        ],
+        "title": "DetectedDamage"
+      },
+      "DriverAssist": {
+        "properties": {
+          "adaptive_cruise": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adaptive Cruise"
+          },
+          "lane_departure_warning": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lane Departure Warning"
+          },
+          "lane_keep_assist": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lane Keep Assist"
+          },
+          "blind_spot_monitoring": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blind Spot Monitoring"
+          }
+        },
+        "type": "object",
+        "required": [
+          "adaptive_cruise",
+          "lane_departure_warning",
+          "lane_keep_assist",
+          "blind_spot_monitoring"
+        ],
+        "title": "DriverAssist",
+        "description": "Sensors that need calibrating after some repairs.\n\nTrue if NHTSA lists the feature as standard, False if it doesn't apply, None if unknown\n(optional equipment, or no data)."
+      },
+      "EditedDamage": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "damage_type": {
+            "$ref": "#/components/schemas/DamageType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Description"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "How sure you are this damage is real and correctly classified."
+          },
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundingBox"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the damage is, or null if unclear."
+          },
+          "photo": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Photo",
+            "description": "Which photo shows it (index into photos).",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "damage_type",
+          "severity",
+          "description",
+          "confidence",
+          "box"
+        ],
+        "title": "EditedDamage"
+      },
+      "Estimate": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "tax_name": {
+            "type": "string",
+            "title": "Tax Name"
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          "hourly_rates": {
+            "$ref": "#/components/schemas/HourlyRates"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/EstimateLine"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "Rounded to the dollar one by one."
+          },
+          "totals": {
+            "$ref": "#/components/schemas/EstimateTotals"
+          },
+          "unpriced": {
+            "items": {
+              "$ref": "#/components/schemas/UnpricedDamage"
+            },
+            "type": "array",
+            "title": "Unpriced"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "region",
+          "tax_name",
+          "vehicle",
+          "hourly_rates",
+          "lines",
+          "totals",
+          "unpriced",
+          "notes"
+        ],
+        "title": "Estimate"
+      },
+      "EstimateLine": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/Operation"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "body_hours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HoursRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refinish_hours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HoursRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CostRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sublet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CostRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Flat-price work done by a specialist."
+          },
+          "cost": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Everything on this line, before tax."
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "operation",
+          "description",
+          "body_hours",
+          "refinish_hours",
+          "parts",
+          "sublet",
+          "cost"
+        ],
+        "title": "EstimateLine"
+      },
+      "EstimateResponse": {
+        "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyzeResponse"
+            },
+            "type": "array",
+            "title": "Photos",
+            "description": "One analysis per uploaded photo."
+          },
+          "damages": {
+            "items": {
+              "$ref": "#/components/schemas/DetectedDamage"
+            },
+            "type": "array",
+            "title": "Damages",
+            "description": "Damage from every photo, combined."
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "estimate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Estimate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when none of the photos is a usable photo of a vehicle."
+          }
+        },
+        "type": "object",
+        "required": [
+          "photos",
+          "damages",
+          "summary",
+          "estimate"
+        ],
+        "title": "EstimateResponse"
+      },
+      "EstimateTotals": {
+        "properties": {
+          "body_hours": {
+            "$ref": "#/components/schemas/HoursRange"
+          },
+          "refinish_hours": {
+            "$ref": "#/components/schemas/HoursRange"
+          },
+          "body_labour": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "shop_materials": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "refinish_labour": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "paint_materials": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "parts": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "sublet": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "subtotal": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "total": {
+            "$ref": "#/components/schemas/CostRange"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body_hours",
+          "refinish_hours",
+          "body_labour",
+          "shop_materials",
+          "refinish_labour",
+          "paint_materials",
+          "parts",
+          "sublet",
+          "subtotal",
+          "tax",
+          "total"
+        ],
+        "title": "EstimateTotals"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HourlyRates": {
+        "properties": {
+          "body_labour": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "refinish_labour": {
+            "$ref": "#/components/schemas/CostRange"
+          },
+          "paint_materials": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per paint labour hour."
+          },
+          "shop_materials": {
+            "$ref": "#/components/schemas/CostRange",
+            "description": "Per body labour hour."
+          }
+        },
+        "type": "object",
+        "required": [
+          "body_labour",
+          "refinish_labour",
+          "paint_materials",
+          "shop_materials"
+        ],
+        "title": "HourlyRates"
+      },
+      "HoursRange": {
+        "properties": {
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "low",
+          "high"
+        ],
+        "title": "HoursRange"
+      },
+      "ImageQuality": {
+        "type": "string",
+        "enum": [
+          "good",
+          "poor",
+          "unusable"
+        ],
+        "title": "ImageQuality"
+      },
+      "Operation": {
+        "type": "string",
+        "enum": [
+          "replace",
+          "repair",
+          "paintless_repair",
+          "polish",
+          "refinish",
+          "blend",
+          "calibrate"
+        ],
+        "title": "Operation"
+      },
+      "Panel": {
+        "type": "string",
+        "enum": [
+          "front_bumper",
+          "rear_bumper",
+          "grille",
+          "hood",
+          "roof",
+          "trunk",
+          "left_front_fender",
+          "right_front_fender",
+          "left_front_door",
+          "right_front_door",
+          "left_rear_door",
+          "right_rear_door",
+          "left_quarter_panel",
+          "right_quarter_panel",
+          "left_rocker",
+          "right_rocker",
+          "left_mirror",
+          "right_mirror",
+          "left_headlight",
+          "right_headlight",
+          "left_taillight",
+          "right_taillight",
+          "windshield",
+          "rear_window",
+          "left_side_glass",
+          "right_side_glass",
+          "left_front_wheel",
+          "right_front_wheel",
+          "left_rear_wheel",
+          "right_rear_wheel"
+        ],
+        "title": "Panel",
+        "description": "Exterior parts we can price. Left/right are the vehicle's own (driver's) left/right."
+      },
+      "PriceRequest": {
+        "properties": {
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "vehicle_size": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BodySize"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vehicle_tier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VehicleTier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "damages": {
+            "items": {
+              "$ref": "#/components/schemas/DamageInput"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Damages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "damages"
+        ],
+        "title": "PriceRequest"
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "minor",
+          "moderate",
+          "severe"
+        ],
+        "title": "Severity"
+      },
+      "ShareRequest": {
+        "properties": {
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "vehicle_size": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BodySize"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vehicle_tier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VehicleTier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photos": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Photos",
+            "description": "image_sha256 of each analysed photo, in display order."
+          },
+          "damages": {
+            "items": {
+              "$ref": "#/components/schemas/EditedDamage"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Damages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "photos",
+          "damages"
+        ],
+        "title": "ShareRequest"
+      },
+      "SharedEstimate": {
+        "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/SharedPhoto"
+            },
+            "type": "array",
+            "title": "Photos"
+          },
+          "damages": {
+            "items": {
+              "$ref": "#/components/schemas/DetectedDamage"
+            },
+            "type": "array",
+            "title": "Damages"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "photos",
+          "damages",
+          "summary",
+          "estimate",
+          "id",
+          "created_at"
+        ],
+        "title": "SharedEstimate"
+      },
+      "SharedPhoto": {
+        "properties": {
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          }
+        },
+        "type": "object",
+        "required": [
+          "width",
+          "height"
+        ],
+        "title": "SharedPhoto"
+      },
+      "UnpricedDamage": {
+        "properties": {
+          "panel": {
+            "$ref": "#/components/schemas/Panel"
+          },
+          "damage_type": {
+            "$ref": "#/components/schemas/DamageType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "panel",
+          "damage_type",
+          "severity",
+          "reason"
+        ],
+        "title": "UnpricedDamage"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Vehicle": {
+        "properties": {
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vin"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Make"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "trim": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trim"
+          },
+          "body_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body Class"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/VehicleTier",
+            "default": "standard"
+          },
+          "size": {
+            "$ref": "#/components/schemas/BodySize",
+            "default": "car"
+          },
+          "driver_assist": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DriverAssist"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Vehicle",
+        "description": "Defaults describe a typical car, used when there's no VIN to look up."
+      },
+      "VehicleTier": {
+        "type": "string",
+        "enum": [
+          "standard",
+          "luxury"
+        ],
+        "title": "VehicleTier"
+      },
+      "ViewAngle": {
+        "type": "string",
+        "enum": [
+          "front",
+          "rear",
+          "left",
+          "right",
+          "front_left",
+          "front_right",
+          "rear_left",
+          "rear_right",
+          "close_up",
+          "unknown"
+        ],
+        "title": "ViewAngle"
+      }
+    }
+  }
+}

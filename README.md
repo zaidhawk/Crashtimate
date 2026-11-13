@@ -1,40 +1,93 @@
 # Crashtimate
 
-Upload a photo of a damaged car and get an itemized repair estimate.
+[![CI](https://github.com/zaidhawk/Crashtimate/actions/workflows/ci.yml/badge.svg)](https://github.com/zaidhawk/Crashtimate/actions/workflows/ci.yml)
+
+Upload photos of a damaged car and get an itemized repair estimate in Canadian dollars.
 
 A vision model describes the damage (which panel, what kind, how bad) as structured JSON.
 A deterministic pricing engine then prices it the way body shop estimating software does:
 repair, replace, refinish and blend operations in labour hours, Ontario shop rates, parts,
 paint materials and specialist work, all as low–high ranges with HST.
 
-> **Status:** Phase 2 of 5. The backend detects and prices damage; the web app and the
-> accuracy evaluation are next. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Keeping those two jobs apart is the main design decision. The model never produces a
+price, so every dollar on an estimate can be traced to a rule and a sourced number, the
+same photo always gets the same price, and the pricing is covered by ordinary unit tests.
+
+> **Status:** the web app, API, pricing engine and evaluation harness are built and tested.
+> Not done yet: a live deployment, and accuracy numbers from a real evaluation run (both
+> need an API key). See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## What it does
+
+- **Photos in, estimate out.** Drop in up to four photos of the same car, or take one with
+  a phone camera. Damage seen from several angles is combined and counted once.
+- **Boxes on the damage.** Each piece of damage is numbered and outlined on the photo, and
+  colour-coded by severity.
+- **You can correct it.** Change the panel, the type or the severity, remove a false
+  alarm, or add damage the model missed. The price updates straight away without paying
+  for another photo analysis.
+- **Priced for your vehicle.** A VIN is decoded through NHTSA's free vPIC service as you
+  type. Luxury makes get luxury rates and parts prices, SUVs and trucks get bigger panels,
+  and cars with lane cameras or radar get sensor calibration after nearby repairs. Without
+  a VIN you pick the vehicle type yourself.
+- **Shareable links.** Save an estimate and send the link to a shop or an insurer. The
+  page also prints cleanly, or saves as a PDF.
 
 ## How it works
 
-- **Detection:** Claude reads the photo and returns a validated damage report: panels,
-  damage types and severity, plus boxes marking where the damage is. A mock detector
-  lets tests and CI run without an API key.
-- **Pricing rules:** each damage becomes an operation. Light scratches are polished, small
-  dents get paintless repair, moderate damage is repaired and repainted, and severe damage
-  is replaced. Damage on the same panel is combined. Repainted panels share setup time, and
-  neighbouring panels are blended so the colour matches.
-- **Vehicle data:** an optional VIN is decoded through NHTSA's vPIC API. Luxury makes get
-  luxury shop rates and parts prices, SUVs and trucks get bigger panels, and cars with
-  lane cameras or radar get sensor calibration after nearby repairs.
+```
+[Next.js web app] ── photos + VIN / postal code ──> [FastAPI]
+                                                       │
+   1. Validate and shrink each photo (Pillow); re-encoding strips GPS data
+   2. Reuse the stored analysis if this exact photo was seen before (SHA-256)
+   3. Otherwise ask the vision model for JSON checked against a Pydantic schema:
+        [{panel, damage_type, severity, box, confidence}]
+   4. Merge the damage from all photos
+   5. Decode the VIN (NHTSA vPIC) → year, make, model, body size, driver-assist sensors
+   6. Pricing engine (pure Python):
+        damage → operations → labour hours × shop rate + parts + paint → low–high range
+                                                       │
+[Results page] <── itemized estimate + damage boxes ───┘
+```
+
+- **Detection:** Claude reads each photo and returns a validated damage report. A mock
+  detector returns sample damage so the tests, CI and local development never need an API
+  key.
+- **Pricing rules:** light scratches are polished, small dents get paintless repair,
+  moderate damage is repaired and repainted, and severe damage is replaced. Damage on the
+  same panel is combined. Repainted panels share setup time, and neighbouring panels are
+  blended so the colour matches.
 - **Sourced numbers:** rates come from posted Ontario shop rate sheets, and every other
   number has a source or is marked as an assumption in
   [docs/cost-data.md](docs/cost-data.md). Calibration tests check estimates against
   published repair prices.
+- **Typed end to end:** the frontend's TypeScript types are generated from the API's
+  OpenAPI schema, and CI fails if they fall out of date.
+
+## Guarding the bill
+
+The vision model is the only part that costs money, so the API protects it:
+
+- **Cache by photo hash.** The same photo is never analysed twice.
+- **Cheap checks first.** A bad VIN or postal code is rejected before the model is called.
+- **Rate limit per visitor**, using a sliding window. Behind a proxy it reads the
+  visitor's address from `X-Forwarded-For`, trusting only the entries our own proxy added.
+- **Daily cap** on paid analyses across all visitors.
+- **Saved estimates are priced on the server.** The browser sends the damage, never the
+  prices, so a shared link always shows numbers this app calculated.
+- **Retention.** Photos, analyses and saved estimates are deleted after 30 days.
 
 ## Stack
 
-- **Backend:** Python 3.12, FastAPI, Pydantic, Pillow, httpx
+- **Backend:** Python 3.12, FastAPI, Pydantic, Pillow, httpx, SQLite
+- **Frontend:** Next.js (App Router), React, TypeScript, Tailwind CSS
 - **Vision:** Claude (Anthropic API) with structured outputs
 - **Data:** cost book in TOML, validated on startup
-- **Tooling:** pytest, ruff, GitHub Actions
+- **Tooling:** pytest, ruff, Vitest, ESLint, Prettier, GitHub Actions, Docker
 
-## Run the backend
+## Run it
+
+Start the API (demo mode by default, no API key needed):
 
 ```bash
 cd backend
@@ -45,7 +98,17 @@ cp .env.example .env            # set CRASHTIMATE_DETECTOR=claude and ANTHROPIC_
 uvicorn app.main:app --reload
 ```
 
-Open http://localhost:8000/docs to try the API.
+Start the web app in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. The API's own docs are at http://localhost:8000/docs.
+
+Or run both with Docker: `docker compose up --build`.
 
 ## Test
 
@@ -55,35 +118,45 @@ pytest
 ruff check . && ruff format --check .
 ```
 
+```bash
+cd frontend
+npm test
+npm run lint && npm run typecheck
+```
+
 ## API
 
 | Endpoint | What it does |
 |---|---|
-| `POST /api/estimate` | Photo (plus optional `vin` and `postal_code`) → damage report and itemized estimate |
-| `POST /api/price` | JSON list of damage (plus optional VIN and postal code) → estimate. Used to re-price after the user corrects the detected damage, without another photo analysis. |
-| `POST /api/analyze` | Photo → damage report only |
+| `POST /api/estimate` | One to four photos (`images`), plus optional `vin`, `postal_code`, `vehicle_size` and `vehicle_tier` → per-photo reports, merged damage and an itemized estimate |
+| `POST /api/price` | JSON list of damage → estimate. Used to re-price after the user corrects the detected damage, without another photo analysis. |
+| `POST /api/shares` | Save an estimate (photo hashes plus the damage) and get an id for a shareable link |
+| `GET /api/shares/{id}` | A saved estimate. Its photos are at `/api/shares/{id}/photos/{n}`. |
+| `POST /api/analyze` | One photo → damage report only |
 | `GET /api/vehicles/{vin}` | Year, make, model, body class and driver-assist features |
 
 A trimmed `POST /api/estimate` response:
 
 ```json
 {
-  "report": {
-    "is_vehicle": true,
-    "image_quality": "good",
-    "view": "front_left",
-    "damages": [
-      {
-        "panel": "left_front_fender",
-        "damage_type": "dent",
-        "severity": "moderate",
-        "description": "Creased dent above the wheel arch, about the size of a hand.",
-        "confidence": 0.9,
-        "box": { "x_min": 0.52, "y_min": 0.38, "x_max": 0.71, "y_max": 0.6 }
-      }
-    ],
-    "summary": "The front left corner took a moderate impact..."
-  },
+  "photos": [
+    {
+      "report": { "is_vehicle": true, "image_quality": "good", "view": "front_left", "...": "..." },
+      "meta": { "detector": "claude", "model": "claude-opus-5-5", "elapsed_ms": 5400, "cached": false }
+    }
+  ],
+  "damages": [
+    {
+      "panel": "left_front_fender",
+      "damage_type": "dent",
+      "severity": "moderate",
+      "description": "Creased dent above the wheel arch, about the size of a hand.",
+      "confidence": 0.9,
+      "box": { "x_min": 0.52, "y_min": 0.38, "x_max": 0.71, "y_max": 0.6 },
+      "photo": 0
+    }
+  ],
+  "summary": "The front left corner took a moderate impact...",
   "estimate": {
     "currency": "CAD",
     "region": "Ontario",
@@ -118,10 +191,22 @@ A trimmed `POST /api/estimate` response:
     },
     "unpriced": [],
     "notes": ["This is an estimate to help you plan, not a quote. ..."]
-  },
-  "meta": { "detector": "claude", "model": "claude-opus-5-5", "elapsed_ms": 5400 }
+  }
 }
 ```
 
 Left and right are the vehicle's own sides, as seen from the driver's seat. Damage types
 match the six categories of the [CarDD](https://cardd-ustc.github.io/) dataset.
+
+## Accuracy evaluation
+
+`backend/evals/` scores a detector against a labelled photo set in COCO format (such as
+CarDD): precision, recall and F1 per damage type, how well the boxes land on the labelled
+damage, and time and tokens per photo. Runs are resumable and can be compared side by side
+across models. No results are published yet, because a run needs an API key and the
+dataset. See [eval/README.md](eval/README.md).
+
+## Deploying
+
+The API ships as a Docker image with a Render blueprint (`render.yaml`), and the web app
+is set up for Vercel. Steps are in [docs/DEPLOY.md](docs/DEPLOY.md).

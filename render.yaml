@@ -1,0 +1,30 @@
+# Render blueprint for the API. In Render: New > Blueprint, pick this repository, then
+# fill in ANTHROPIC_API_KEY and CRASHTIMATE_CORS_ORIGINS when asked.
+# The frontend goes on Vercel: see docs/DEPLOY.md.
+
+services:
+  - type: web
+    name: crashtimate-api
+    runtime: docker
+    rootDir: backend
+    healthCheckPath: /api/health
+    # A disk needs a paid instance. On the free plan, delete the disk block: the app still
+    # works, but cached analyses and saved estimates are lost on each deploy.
+    plan: starter
+    disk:
+      name: crashtimate-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: CRASHTIMATE_DETECTOR
+        value: claude
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # JSON list holding the frontend's address, e.g. ["https://crashtimate.vercel.app"]
+      - key: CRASHTIMATE_CORS_ORIGINS
+        sync: false
+      # Render puts one proxy in front of the app; rate limits need the visitor's address.
+      - key: CRASHTIMATE_PROXY_HOPS
+        value: "1"
+      - key: CRASHTIMATE_DAILY_ANALYSIS_LIMIT
+        value: "100"

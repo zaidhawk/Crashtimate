@@ -1,0 +1,32 @@
+# Run the whole app:  docker compose up --build   then open http://localhost:3000
+#
+# It starts in demo mode (sample damage, real pricing). For real photo analysis:
+#   CRASHTIMATE_DETECTOR=claude ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      CRASHTIMATE_DETECTOR: ${CRASHTIMATE_DETECTOR:-mock}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CRASHTIMATE_CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - crashtimate-data:/data
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    environment:
+      # Saved-estimate pages are rendered on the server, which reaches the API by service name.
+      API_URL_INTERNAL: http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  crashtimate-data:

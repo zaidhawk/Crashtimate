@@ -20,7 +20,7 @@ consistent from one upload to the next.
    4. Pricing engine (pure Python, unit-tested):
         damage → operations → labor hours × regional rate + parts + paint
         → low–high range
-   5. Save the estimate (SQLite locally, Postgres when deployed)
+   5. Cache the analysis and save shared estimates (SQLite)
                                                   │
 [Results page] <── itemized estimate + damage boxes drawn on the photo
 ```
@@ -59,22 +59,32 @@ consistent from one upload to the next.
 - [x] `docs/cost-data.md` with sources, plus calibration tests against published prices
 
 ### Phase 3: Frontend
-- [ ] Next.js + TypeScript + Tailwind
-- [ ] Drag-and-drop / camera upload, optional VIN and postal code
-- [ ] Results page: itemized table, cost range, damage boxes over the photo
+- [x] Next.js + TypeScript + Tailwind
+- [x] Drag-and-drop / camera upload, optional VIN (looked up as it is typed) and postal code
+- [x] Vehicle type picker for when there is no VIN
+- [x] Results page: itemized table grouped by panel, cost range, damage boxes over the photo
+- [x] Edit, remove or add damage and re-price without another photo analysis
+- [x] TypeScript types generated from the API's OpenAPI schema, checked in CI
+- [x] Unit tests (Vitest), ESLint, Prettier, frontend CI job
 
 ### Phase 4: Accuracy evaluation
-- [ ] Labeled image set (CarDD / Roboflow car-damage sets + hand-labeled panels)
-- [ ] Eval script: per-damage-type precision/recall, panel accuracy, cost per request
+- [x] Eval harness (`backend/evals/`): COCO loader, resumable runner, scoring, Markdown report
+- [x] Per-damage-type precision/recall/F1, box location, panel accuracy, time and tokens per photo
+- [ ] Get the CarDD dataset (request form) and run it with a real API key
 - [ ] Model comparison table in the README
+- [ ] Hand-label panels on a subset to measure panel accuracy
 
 ### Phase 5: Deploy and polish
-- [ ] Dockerfile, backend on Render or Fly.io, frontend on Vercel
-- [ ] Per-IP rate limiting, daily spend cap, cache results by image hash
-- [ ] Save estimates (SQLite locally, Postgres when deployed) with shareable links
-- [ ] README with demo GIF, architecture diagram and live link
+- [x] Per-IP rate limiting, daily analysis cap, cache results by image hash
+- [x] Save estimates in SQLite with shareable links, deleted after 30 days
+- [x] Dockerfiles, `docker-compose.yml`, Render blueprint, deploy guide
+- [ ] Build and run the Docker images (written but not yet built)
+- [ ] Deploy: backend on Render or Fly.io, frontend on Vercel
+- [ ] README demo GIF and live link
 
 ### Stretch
+- [x] Multiple photos merged into one estimate
+- [x] Print / save as PDF from the results page
 - [ ] YOLOv8 segmentation model trained on CarDD for precise damage boxes
-- [ ] PDF export of estimates
-- [ ] Multiple photos merged into one estimate
+- [ ] Browser tests of the whole flow (Playwright)
+- [ ] Postgres and Redis if it ever needs more than one server process

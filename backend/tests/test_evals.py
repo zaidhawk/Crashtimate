@@ -15,12 +15,13 @@ from app.schemas import (
     Severity,
     ViewAngle,
 )
+from evals import compare as compare_module
 from evals import report as report_module
 from evals.dataset import Box, DatasetError, Label, load_coco, sample
 from evals.metrics import Counts, iou, score
 from evals.report import render, summarize
 from evals.run import Record, read_records, run
-from tests.conftest import make_image
+from tests.conftest import make_image, mock_settings
 
 DENT, SCRATCH, CRACK = DamageType.DENT, DamageType.SCRATCH, DamageType.CRACK
 
@@ -342,3 +343,51 @@ def test_report_command_prints_a_table(dataset, tmp_path, capsys):
 def test_report_command_fails_cleanly_without_a_dataset(tmp_path, capsys):
     assert report_module.main(["x.jsonl", "--annotations", str(tmp_path / "missing.json")]) == 1
     assert "Couldn't load the dataset" in capsys.readouterr().err
+
+
+# Model comparison
+
+
+@pytest.fixture
+def photos(tmp_path):
+    folder = tmp_path / "photos"
+    folder.mkdir()
+    (folder / "b.PNG").write_bytes(make_image(fmt="PNG"))
+    (folder / "a.jpg").write_bytes(make_image())
+    (folder / "notes.txt").write_text("not a photo")
+    return folder
+
+
+def test_compare_runs_each_photo_once_per_model(photos, tmp_path, cost_book):
+    samples = compare_module.find_photos(photos)
+    assert [item.image_id for item in samples] == ["a.jpg", "b.PNG"]
+
+    detectors = {"haiku": FlakyDetector(), "opus": FlakyDetector(failures={2})}
+    out = tmp_path / "results"
+    results = asyncio.run(compare_module.compare(samples, detectors, out, max_edge=1568))
+
+    assert results["opus"]["b.PNG"].error == "The service is busy."
+    # A second run only retries the photo that failed.
+    asyncio.run(compare_module.compare(samples, detectors, out, max_edge=1568))
+    assert (detectors["haiku"].calls, detectors["opus"].calls) == (2, 3)
+
+    models = {"haiku": "claude-haiku-5-5", "opus": "unknown-model"}
+    text = compare_module.render(samples, results, models, cost_book)
+    # (1000 x $0.10 + 200 x $0.50) per million tokens, for each of two photos
+    assert "| haiku | 2 | 0 | 6 |" in text
+    assert "| $0.0004 | $0.0002 |" in text
+    assert "| opus | 2 | 1 | 3 |" in text
+    assert "### b.PNG" in text
+    assert "left front fender: moderate dent (90%)" in text
+    assert "| opus | error: The service is busy. | n/a | n/a | n/a |" in text
+
+
+def test_compare_command_checks_before_spending(photos, tmp_path, capsys, monkeypatch):
+    assert compare_module.main([str(tmp_path / "missing")]) == 1
+    assert compare_module.main([str(photos), "--max-photos", "1"]) == 1
+    monkeypatch.setattr(compare_module, "Settings", mock_settings)
+    assert compare_module.main([str(photos)]) == 1
+    errors = capsys.readouterr().err
+    assert "isn't a folder" in errors
+    assert "more than --max-photos 1" in errors
+    assert "ANTHROPIC_API_KEY isn't set" in errors

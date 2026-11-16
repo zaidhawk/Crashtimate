@@ -70,9 +70,9 @@ consistent from one upload to the next.
 ### Phase 4: Accuracy evaluation
 - [x] Eval harness (`backend/evals/`): COCO loader, resumable runner, scoring, Markdown report
 - [x] Per-damage-type precision/recall/F1, box location, panel accuracy, time and tokens per photo
-- [ ] Get the CarDD dataset (request form) and run it with a real API key
-- [ ] Model comparison table in the README
-- [ ] Hand-label panels on a subset to measure panel accuracy
+- [x] Get the CarDD dataset (request form) and run it with a real API key (50 test photos, three models)
+- [x] Model comparison table in the README
+- [x] Label panels on a subset to measure panel accuracy (75 damages on the 50 CarDD photos)
 
 ### Phase 5: Deploy and polish
 - [x] Per-IP rate limiting, daily analysis cap, cache results by image hash

@@ -14,8 +14,8 @@ price, so every dollar on an estimate can be traced to a rule and a sourced numb
 same photo always gets the same price, and the pricing is covered by ordinary unit tests.
 
 > **Status:** the web app, API, pricing engine and evaluation harness are built and tested.
-> Not done yet: a live deployment, and accuracy numbers from a real evaluation run (both
-> need an API key). See [docs/ROADMAP.md](docs/ROADMAP.md).
+> Three models have been scored on the CarDD dataset ([results](#results-on-cardd)).
+> Not done yet: a live deployment. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## What it does
 
@@ -203,8 +203,37 @@ match the six categories of the [CarDD](https://cardd-ustc.github.io/) dataset.
 `backend/evals/` scores a detector against a labelled photo set in COCO format (such as
 CarDD): precision, recall and F1 per damage type, how well the boxes land on the labelled
 damage, and time and tokens per photo. Runs are resumable and can be compared side by side
-across models. No results are published yet, because a run needs an API key and the
-dataset. See [eval/README.md](eval/README.md).
+across models. See [eval/README.md](eval/README.md).
+
+### Results on CarDD
+
+Three models on the same 50 photos, drawn at random (seed 0) from CarDD's 374-photo test
+split, 115 labelled damages, effort `medium`, November 2026:
+
+| Model | Precision | Recall | F1 | Labels located | Panel accuracy | Median time | Cost per photo (USD) |
+|---|---|---|---|---|---|---|---|
+| Claude Haiku 5.5 | 78.6% | 89.2% | 83.5% | 44.3% | 82.1% (32 of 39) | 7.5 s | $0.0009 |
+| Claude Sonnet 5.5 | 75.8% | 97.3% | 85.2% | 51.3% | 90.2% (37 of 41) | 4.6 s | $0.0126 |
+| Claude Opus 5.5 | 75.3% | 94.6% | 83.8% | 47.8% | 97.3% (36 of 37) | 10.6 s | $0.0307 |
+
+What the numbers say:
+
+- **The three models are tied on naming the type of damage.** With 50 photos, a gap of a
+  couple of points is within noise. Sonnet matches Opus at 41% of the cost and less than
+  half the wait; Haiku gets there at 3% of the cost but misses more damage (lower recall).
+- **Recall is high and precision is lower.** The models rarely miss labelled damage, and
+  about one reported damage type in four is not in the labels.
+- **Boxes are the weak point.** Only about half of the labelled damages have a predicted
+  box of the same type on them, even at a loose overlap threshold (IoU 0.3). Part of that
+  is by design, since the detector draws one box per panel while CarDD labels every mark.
+- **Panel accuracy is where the models separate.** CarDD has no panel labels, so panels
+  were labelled for this project on 75 of the 115 damages, before looking at any model's
+  answers ([eval/cardd_panel_labels.json](eval/cardd_panel_labels.json)). The other 40
+  are close-ups where the panel or the side of the car can't be told. When a model's box
+  lands on a labelled damage, Opus names the right panel 36 times out of 37, Sonnet 37 of
+  41 and Haiku 32 of 39. The panel decides the price, so the app defaults to Opus; the
+  sample is small, and Sonnet is a setting away if cost matters more.
+- **What this does not measure:** severity, which CarDD does not label.
 
 ## Deploying
 

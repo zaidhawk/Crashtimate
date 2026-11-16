@@ -4,8 +4,23 @@ Measures how well the damage detector does on photos that people have already la
 The code is in `backend/evals/`; this folder holds the data and results (photos and raw
 results are gitignored).
 
-**No results are published yet.** A run needs an Anthropic API key and a dataset, and
-neither has been set up. The harness itself is tested with a fake detector.
+Results from a 50-photo CarDD run on three models are in the
+[main README](../README.md#results-on-cardd). A run needs an Anthropic API key and a
+dataset. The harness itself is also tested with a fake detector.
+
+Per damage type, F1 on those 50 photos:
+
+| Damage type | Photos with it | Haiku 5.5 | Sonnet 5.5 | Opus 5.5 |
+|---|---|---|---|---|
+| dent | 19 | 90.5% | 84.4% | 80.9% |
+| scratch | 26 | 80.0% | 89.7% | 86.2% |
+| crack | 11 | 72.0% | 71.4% | 72.0% |
+| glass shatter | 9 | 94.7% | 94.7% | 94.7% |
+| lamp broken | 6 | 72.7% | 76.9% | 83.3% |
+| tire flat | 3 | 100.0% | 100.0% | 100.0% |
+
+The rarer types rest on very few photos, so read those rows loosely. Cracks are the
+hardest type for every model.
 
 ## Get a dataset
 
@@ -17,6 +32,16 @@ that page. It comes in COCO format, which is what the loader reads.
 Any COCO-format set works if its category names match those six. To score panels as well,
 add a `"panel"` to each annotation with one of the names in `backend/app/schemas.py`
 (for example `"left_front_door"`).
+
+For CarDD's test split, [cardd_panel_labels.json](cardd_panel_labels.json) has panels for
+75 damages on the 50 photos used in the published run (annotation id to panel). Merge them
+into a copy of the annotations, from `backend/`:
+
+```bash
+python -m evals.add_panels --annotations path/to/instances_test2017.json --panels ../eval/cardd_panel_labels.json --out ../eval/annotations-panels.json
+```
+
+Then pass `../eval/annotations-panels.json` to `evals.report` to get the panel accuracy column.
 
 Put the files here:
 

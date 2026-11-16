@@ -15,6 +15,7 @@ from app.schemas import (
     Severity,
     ViewAngle,
 )
+from evals import add_panels as add_panels_module
 from evals import compare as compare_module
 from evals import report as report_module
 from evals.dataset import Box, DatasetError, Label, load_coco, sample
@@ -394,3 +395,32 @@ def test_compare_command_checks_before_spending(photos, tmp_path, capsys, monkey
     assert "isn't a folder" in errors
     assert "more than --max-photos 1" in errors
     assert "ANTHROPIC_API_KEY isn't set" in errors
+
+
+def _coco_with_two_annotations():
+    return {
+        "categories": [{"id": 1, "name": "dent"}],
+        "images": [{"id": 7, "width": 100, "height": 100, "file_name": "a.jpg"}],
+        "annotations": [
+            {"id": 1, "image_id": 7, "category_id": 1, "bbox": [0, 0, 50, 50]},
+            {"id": 2, "image_id": 7, "category_id": 1, "bbox": [50, 50, 50, 50]},
+        ],
+    }
+
+
+def test_add_panels_labels_only_the_annotations_it_names(tmp_path):
+    annotations, panels, out = (tmp_path / name for name in ("a.json", "p.json", "out.json"))
+    annotations.write_text(json.dumps(_coco_with_two_annotations()), encoding="utf-8")
+    panels.write_text(json.dumps({"2": "left_front_door"}), encoding="utf-8")
+
+    args = ["--annotations", str(annotations), "--panels", str(panels), "--out", str(out)]
+    assert add_panels_module.main(args) == 0
+
+    [sample_] = load_coco(out, tmp_path)
+    assert [label.panel for label in sample_.labels] == [None, Panel.LEFT_FRONT_DOOR]
+
+
+@pytest.mark.parametrize("panels", [{"2": "left_door"}, {"99": "hood"}])
+def test_add_panels_rejects_unknown_panels_and_ids(panels):
+    with pytest.raises(ValueError):
+        add_panels_module.add_panels(_coco_with_two_annotations(), panels)

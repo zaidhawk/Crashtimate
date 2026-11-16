@@ -364,7 +364,10 @@ def test_compare_runs_each_photo_once_per_model(photos, tmp_path, cost_book):
 
     detectors = {"haiku": FlakyDetector(), "opus": FlakyDetector(failures={2})}
     out = tmp_path / "results"
-    results = asyncio.run(compare_module.compare(samples, detectors, out, max_edge=1568))
+    # One at a time, so which photo hits the failure is predictable.
+    results = asyncio.run(
+        compare_module.compare(samples, detectors, out, max_edge=1568, concurrency=1)
+    )
 
     assert results["opus"]["b.PNG"].error == "The service is busy."
     # A second run only retries the photo that failed.

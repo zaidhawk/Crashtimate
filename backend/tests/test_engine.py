@@ -217,6 +217,33 @@ def test_rear_bumper_repair_calibrates_blind_spot_radar(price):
     assert line(estimate, Panel.REAR_BUMPER, Operation.CALIBRATE)
 
 
+@pytest.mark.parametrize(
+    ("reported", "window"),
+    [
+        (Panel.RIGHT_FRONT_DOOR, Panel.RIGHT_SIDE_GLASS),
+        (Panel.LEFT_QUARTER_PANEL, Panel.LEFT_SIDE_GLASS),
+        (Panel.TRUNK, Panel.REAR_WINDOW),
+    ],
+)
+def test_shattered_glass_on_a_body_panel_is_priced_as_its_window(price, reported, window):
+    estimate = price((reported, DamageType.GLASS_SHATTER, SEVERE))
+
+    assert operations(estimate) == [(window, REPLACE)]
+    assert estimate.unpriced == []
+    assert estimate.totals == price((window, DamageType.GLASS_SHATTER, SEVERE)).totals
+
+
+def test_door_glass_and_side_glass_on_one_side_are_one_window(price):
+    estimate = price(
+        (Panel.LEFT_FRONT_DOOR, DamageType.GLASS_SHATTER, SEVERE),
+        (Panel.LEFT_SIDE_GLASS, DamageType.GLASS_SHATTER, SEVERE),
+        (Panel.LEFT_FRONT_DOOR, DENT, MODERATE),
+    )
+
+    assert operations(estimate).count((Panel.LEFT_SIDE_GLASS, REPLACE)) == 1
+    assert (Panel.LEFT_FRONT_DOOR, REPAIR) in operations(estimate)
+
+
 def test_impossible_and_doubtful_damage_is_listed_but_not_priced(cost_book):
     damages = [
         DamageInput(panel=Panel.HOOD, damage_type=DamageType.TIRE_FLAT, severity=MINOR),

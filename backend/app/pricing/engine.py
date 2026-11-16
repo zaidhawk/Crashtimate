@@ -24,10 +24,10 @@ from app.pricing.models import (
     Operation,
     UnpricedDamage,
 )
-from app.pricing.panels import ADJACENT, PANEL_ORDER, panel_label
+from app.pricing.panels import ADJACENT, PANEL_ORDER, WINDOW_OF, panel_label
 from app.pricing.rules import DAMAGE_LABELS, Sublet, Unpriced, Work, WorkKind, plan_work
 from app.pricing.span import ZERO, Span, whole_dollars
-from app.schemas import Panel, Severity
+from app.schemas import DamageType, Panel, Severity
 from app.vehicles import Vehicle
 
 # Damage the detector is less sure about than this is listed but not priced.
@@ -133,6 +133,9 @@ class _Estimator:
             if damage.confidence < MIN_CONFIDENCE:
                 self._skip(damage, LOW_CONFIDENCE_REASON)
                 continue
+            if damage.damage_type is DamageType.GLASS_SHATTER and damage.panel in WINDOW_OF:
+                # "Shattered glass on the door" is the door's window, not the door skin.
+                damage = damage.model_copy(update={"panel": WINDOW_OF[damage.panel]})
             spec = self.book.spec(damage.panel)
             work = plan_work(damage.panel, spec.category, damage.damage_type, damage.severity)
             if isinstance(work, Unpriced):

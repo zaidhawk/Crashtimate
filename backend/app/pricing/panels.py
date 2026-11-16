@@ -61,6 +61,17 @@ def _symmetric(pairs: list[tuple[Panel, Panel]]) -> dict[Panel, frozenset[Panel]
 
 ADJACENT = _symmetric(_TOUCHING)
 
+# The window each body panel carries. Shattered glass reported on the panel means its window.
+WINDOW_OF: dict[Panel, Panel] = {
+    Panel.LEFT_FRONT_DOOR: Panel.LEFT_SIDE_GLASS,
+    Panel.LEFT_REAR_DOOR: Panel.LEFT_SIDE_GLASS,
+    Panel.LEFT_QUARTER_PANEL: Panel.LEFT_SIDE_GLASS,
+    Panel.RIGHT_FRONT_DOOR: Panel.RIGHT_SIDE_GLASS,
+    Panel.RIGHT_REAR_DOOR: Panel.RIGHT_SIDE_GLASS,
+    Panel.RIGHT_QUARTER_PANEL: Panel.RIGHT_SIDE_GLASS,
+    Panel.TRUNK: Panel.REAR_WINDOW,
+}
+
 PANEL_ORDER = {panel: index for index, panel in enumerate(Panel)}
 
 

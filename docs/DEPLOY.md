@@ -14,9 +14,10 @@ runs on Vercel. Neither has been deployed yet: these are the steps.
 3. Wait for the deploy, then open `https://<your-service>.onrender.com/api/health`.
    It should answer `{"status":"ok","detector":"claude"}`.
 
-The blueprint mounts a 1 GB disk at `/data` for the SQLite file, which needs a paid
-instance. On the free plan remove the `disk` block: everything works, but cached analyses
-and saved estimates are lost on each deploy.
+The blueprint uses Render's free plan, which has no disk and sleeps when idle: cached
+analyses and saved estimates are lost whenever the service restarts, and the first request
+after a sleep takes about a minute. `render.yaml` says how to switch to a paid instance
+with a disk at `/data` to keep them.
 
 ## 2. Web app on Vercel
 
@@ -24,6 +25,16 @@ and saved estimates are lost on each deploy.
 2. Add the environment variable `NEXT_PUBLIC_API_URL` with the API's address from step 1
    (no trailing slash).
 3. Deploy, then put the Vercel address into `CRASHTIMATE_CORS_ORIGINS` on Render.
+
+## 3. Your own domain (optional)
+
+1. In Vercel open the project's **Settings > Domains** and add the name, for example
+   `crashtimate.example.com`.
+2. Vercel shows a DNS record to create, normally a `CNAME` for the subdomain. Add exactly
+   that record at your DNS provider and wait for Vercel to mark the domain as valid.
+3. Change `CRASHTIMATE_CORS_ORIGINS` on Render to the new address, for example
+   `["https://crashtimate.example.com"]`. The browser blocks the app's requests until
+   this matches.
 
 ## Settings that matter in production
 

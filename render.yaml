@@ -8,13 +8,11 @@ services:
     runtime: docker
     rootDir: backend
     healthCheckPath: /api/health
-    # A disk needs a paid instance. On the free plan, delete the disk block: the app still
-    # works, but cached analyses and saved estimates are lost on each deploy.
-    plan: starter
-    disk:
-      name: crashtimate-data
-      mountPath: /data
-      sizeGB: 1
+    # The free plan has no disk and sleeps when idle: cached analyses and saved estimates are
+    # lost whenever it restarts, and the first request after a sleep takes about a minute.
+    # To keep them, switch to `plan: starter` and add:
+    #   disk: {name: crashtimate-data, mountPath: /data, sizeGB: 1}
+    plan: free
     envVars:
       - key: CRASHTIMATE_DETECTOR
         value: claude
@@ -26,5 +24,6 @@ services:
       # Render puts one proxy in front of the app; rate limits need the visitor's address.
       - key: CRASHTIMATE_PROXY_HOPS
         value: "1"
+      # Each analysis costs about 3 US cents on Opus, so this caps a day at about 30 cents.
       - key: CRASHTIMATE_DAILY_ANALYSIS_LIMIT
-        value: "100"
+        value: "10"

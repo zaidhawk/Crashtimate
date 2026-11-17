@@ -79,7 +79,7 @@ consistent from one upload to the next.
 - [x] Save estimates in SQLite with shareable links, deleted after 30 days
 - [x] Dockerfiles, `docker-compose.yml`, Render blueprint, deploy guide
 - [ ] Build and run the Docker images (written but not yet built)
-- [ ] Deploy: backend on Render or Fly.io, frontend on Vercel
+- [x] Deploy: backend on Render, frontend on Vercel at crashtimate.zaidhaque.ca
 - [ ] README demo GIF and live link
 
 ### Stretch

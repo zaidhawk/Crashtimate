@@ -4,6 +4,9 @@
 
 Upload photos of a damaged car and get an itemized repair estimate in Canadian dollars.
 
+**Live demo: [crashtimate.zaidhaque.ca](https://crashtimate.zaidhaque.ca)** (the API sleeps when
+idle, so the first estimate after a quiet spell can take about a minute)
+
 A vision model describes the damage (which panel, what kind, how bad) as structured JSON.
 A deterministic pricing engine then prices it the way body shop estimating software does:
 repair, replace, refinish and blend operations in labour hours, Ontario shop rates, parts,
@@ -15,7 +18,7 @@ same photo always gets the same price, and the pricing is covered by ordinary un
 
 > **Status:** the web app, API, pricing engine and evaluation harness are built and tested.
 > Three models have been scored on the CarDD dataset ([results](#results-on-cardd)).
-> Not done yet: a live deployment. See [docs/ROADMAP.md](docs/ROADMAP.md).
+> It is deployed on Vercel and Render. See [docs/ROADMAP.md](docs/ROADMAP.md) for what is left.
 
 ## What it does
 

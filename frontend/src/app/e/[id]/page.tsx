@@ -36,8 +36,8 @@ export default async function SharedEstimatePage({ params }: PageProps<"/e/[id]"
   if (!saved) notFound();
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted">Saved estimate from {formatDate(saved.created_at)}</p>
+    <div className="space-y-4">
+      <p className="eyebrow">Saved estimate · {formatDate(saved.created_at)}</p>
       <EstimateView
         photos={saved.photos.map((_, index) => ({ src: sharedPhotoUrl(id, index) }))}
         damages={saved.damages}
@@ -46,7 +46,7 @@ export default async function SharedEstimatePage({ params }: PageProps<"/e/[id]"
         actions={
           <>
             <PrintButton />
-            <Link href="/" className="btn btn-primary">
+            <Link href="/" className="btn btn-signal">
               Estimate your own
             </Link>
           </>

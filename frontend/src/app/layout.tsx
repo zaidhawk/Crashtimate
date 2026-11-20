@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -18,15 +27,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-CA" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en-CA" className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <header className="border-b border-line bg-surface">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
-            <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-sm text-white">
-                C
-              </span>
-              Crashtimate
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+            <Link href="/" className="flex items-center gap-2.5" aria-label="Crashtimate home">
+              <Image src="/logo.png" alt="" width={41} height={28} priority />
+              <span className="text-[17px] font-semibold tracking-tight">Crashtimate</span>
             </Link>
             <a
               href="https://github.com/zaidhawk/Crashtimate"
@@ -36,14 +43,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </a>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
           {children}
         </main>
-        <footer className="border-t border-line">
-          <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-muted sm:px-6">
-            Crashtimate gives a planning estimate, not a quote. Shops often find more damage once
-            parts come off. Prices are in Canadian dollars and use Ontario shop rates.
-          </p>
+        <footer className="border-t border-line bg-surface">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <p className="max-w-xl">
+              A planning estimate, not a quote. Shops often find more damage once parts come off.
+            </p>
+            <p className="font-mono">CAD · Ontario shop rates · 13% HST</p>
+          </div>
         </footer>
       </body>
     </html>

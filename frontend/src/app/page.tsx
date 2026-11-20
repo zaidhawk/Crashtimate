@@ -19,26 +19,34 @@ export default function Home() {
   return (
     <Estimator
       intro={
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+        <div>
+          <p className="eyebrow">Collision repair estimator</p>
+          <h1 className="mt-3 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl">
             What will the repair cost?
           </h1>
-          <p className="mt-3 text-muted">
+          <p className="mt-4 max-w-md text-[17px] leading-relaxed text-muted">
             Upload photos of the damage and get an itemized estimate in Canadian dollars, with every
             line explained.
           </p>
         </div>
       }
       outro={
-        <ol className="no-print mx-auto grid max-w-4xl gap-4 sm:grid-cols-3">
-          {STEPS.map((step, index) => (
-            <li key={step.title} className="card p-4">
-              <p className="text-xs font-semibold text-accent">STEP {index + 1}</p>
-              <h2 className="mt-1 font-semibold">{step.title}</h2>
-              <p className="mt-1 text-sm text-muted">{step.text}</p>
-            </li>
-          ))}
-        </ol>
+        <section id="how-it-works" className="no-print scroll-mt-20">
+          <h2 className="eyebrow">How it works</h2>
+          <ol className="mt-3 border-t border-line">
+            {STEPS.map((step, index) => (
+              <li key={step.title} className="flex gap-4 border-b border-line py-4">
+                <span className="w-6 shrink-0 pt-px font-mono text-sm text-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 className="font-semibold">{step.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
       }
     />
   );

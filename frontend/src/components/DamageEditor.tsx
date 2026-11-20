@@ -43,13 +43,13 @@ export function DamageEditor({ damages, onChange, highlighted, onHighlight }: Pr
             key={index}
             onMouseEnter={() => onHighlight(index)}
             onMouseLeave={() => onHighlight(null)}
-            className={`rounded-xl border p-3 transition-colors ${
-              highlighted === index ? "border-accent bg-accent-soft" : "border-line"
+            className={`rounded-md border p-3 transition-colors ${
+              highlighted === index ? "border-ink bg-signal-soft" : "border-line"
             }`}
           >
             <div className="flex items-start gap-3">
               <span
-                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-semibold text-white ${SEVERITY_DOT[damage.severity]}`}
+                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded font-mono text-xs font-medium text-white ${SEVERITY_DOT[damage.severity]}`}
               >
                 {index + 1}
               </span>
@@ -79,7 +79,7 @@ export function DamageEditor({ damages, onChange, highlighted, onHighlight }: Pr
                 aria-label={`Remove damage ${index + 1}`}
                 title="Remove"
                 onClick={() => onChange(damages.filter((_, i) => i !== index))}
-                className="no-print -mt-1 -mr-1 cursor-pointer rounded-md p-1.5 text-muted hover:bg-stone-100 hover:text-severe"
+                className="no-print -mt-1 -mr-1 cursor-pointer rounded-md p-1.5 text-muted hover:bg-paper hover:text-severe"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path
@@ -128,7 +128,7 @@ export function DamageEditor({ damages, onChange, highlighted, onHighlight }: Pr
             <div
               role="radiogroup"
               aria-label={`Severity of damage ${index + 1}`}
-              className="mt-2 grid grid-cols-3 gap-1 rounded-lg bg-stone-100 p-1"
+              className="mt-2 grid grid-cols-3 gap-1 rounded-md border border-line bg-paper p-1"
             >
               {SEVERITIES.map((severity: Severity) => (
                 <button
@@ -138,10 +138,8 @@ export function DamageEditor({ damages, onChange, highlighted, onHighlight }: Pr
                   aria-checked={damage.severity === severity}
                   title={SEVERITY_HINTS[severity]}
                   onClick={() => update(index, { severity })}
-                  className={`cursor-pointer rounded-md px-2 py-1 text-xs font-medium transition-colors ${
-                    damage.severity === severity
-                      ? "bg-surface text-ink shadow-sm"
-                      : "text-muted hover:text-ink"
+                  className={`cursor-pointer rounded px-2 py-1.5 text-xs font-medium transition-colors ${
+                    damage.severity === severity ? "bg-ink text-white" : "text-muted hover:text-ink"
                   }`}
                 >
                   {SEVERITY_LABELS[severity]}
@@ -153,7 +151,7 @@ export function DamageEditor({ damages, onChange, highlighted, onHighlight }: Pr
       </ul>
       <button
         type="button"
-        className="btn no-print mt-3 w-full"
+        className="btn no-print mt-3 w-full border-dashed"
         onClick={() => onChange([...damages, newDamage()])}
       >
         + Add damage

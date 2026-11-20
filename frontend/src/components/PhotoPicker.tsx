@@ -60,14 +60,14 @@ export function PhotoPicker({ photos, onChange }: Props) {
           setDragging(false);
           add(event.dataTransfer.files);
         }}
-        className={`rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
-          dragging ? "border-accent bg-accent-soft" : "border-stone-300 bg-surface"
+        className={`rounded-md border border-dashed px-6 py-8 text-center transition-colors ${
+          dragging ? "border-ink bg-signal-soft" : "border-line-strong bg-paper/50"
         }`}
       >
         <svg
-          className="mx-auto text-stone-400"
-          width="40"
-          height="40"
+          className="mx-auto text-ink"
+          width="28"
+          height="28"
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"
@@ -79,9 +79,9 @@ export function PhotoPicker({ photos, onChange }: Props) {
           />
           <circle cx="12" cy="12.5" r="3.25" stroke="currentColor" strokeWidth="1.5" />
         </svg>
-        <p className="mt-3 font-medium">Drop photos of the damage here</p>
-        <p className="mt-1 text-sm text-muted">
-          Up to {MAX_PHOTOS} photos of the same vehicle. Different angles give a better estimate.
+        <p className="mt-3 font-medium">Drop photos here</p>
+        <p className="mx-auto mt-1 max-w-xs text-sm text-muted">
+          Up to {MAX_PHOTOS} of the same vehicle. Different angles give a better estimate.
         </p>
         <button type="button" className="btn mt-4" onClick={() => input.current?.click()}>
           Choose photos or take one
@@ -108,11 +108,11 @@ export function PhotoPicker({ photos, onChange }: Props) {
       )}
 
       {photos.length > 0 && (
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ul className="mt-3 grid grid-cols-4 gap-2">
           {photos.map((photo, index) => (
             <li
               key={photo.url}
-              className="group relative aspect-4/3 overflow-hidden rounded-xl bg-stone-100"
+              className="group relative aspect-square overflow-hidden rounded-md bg-paper ring-1 ring-line"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo.url} alt={photo.file.name} className="h-full w-full object-cover" />
@@ -120,9 +120,9 @@ export function PhotoPicker({ photos, onChange }: Props) {
                 type="button"
                 aria-label={`Remove ${photo.file.name}`}
                 onClick={() => remove(index)}
-                className="absolute top-1.5 right-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-ink/75 text-white hover:bg-ink"
+                className="absolute top-1 right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-ink/80 text-white hover:bg-ink"
               >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path
                     d="M3 3l10 10M13 3L3 13"
                     stroke="currentColor"

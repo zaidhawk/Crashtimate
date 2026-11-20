@@ -7,7 +7,7 @@ import { priceRequest, shareRequest } from "@/lib/estimate";
 import type { Damage, Estimate, PhotoAnalysis, VehicleOptions } from "@/lib/types";
 
 import { EstimateView } from "./EstimateView";
-import { type PickedPhoto, PhotoPicker } from "./PhotoPicker";
+import { MAX_PHOTOS, type PickedPhoto, PhotoPicker } from "./PhotoPicker";
 import type { ViewerPhoto } from "./PhotoViewer";
 import { VehicleFields, type VinLookup, vehicleOptionsProblem } from "./VehicleFields";
 
@@ -159,19 +159,16 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
     const demo = result.photos.some((photo) => photo.meta.detector === "mock");
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {demo && (
-          <p className="no-print rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          <p className="notice no-print border-line-strong bg-signal-soft text-ink">
             <span className="font-semibold">Demo mode.</span> The server isn&apos;t connected to a
             vision model, so this shows sample damage rather than an analysis of your photo. The
             pricing is real.
           </p>
         )}
         {error && (
-          <p
-            role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-          >
+          <p role="alert" className="notice notice-error">
             {error}
           </p>
         )}
@@ -186,15 +183,15 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
             updating={repricing}
             actions={
               <>
-                <button type="button" className="btn" onClick={startOver}>
+                <button type="button" className="btn btn-on-dark" onClick={startOver}>
                   New estimate
                 </button>
-                <button type="button" className="btn" onClick={() => window.print()}>
+                <button type="button" className="btn btn-on-dark" onClick={() => window.print()}>
                   Print or save PDF
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-signal"
                   onClick={save}
                   disabled={share.status === "saving" || repricing}
                 >
@@ -204,11 +201,11 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
             }
           >
             {share.status === "saved" && (
-              <div className="card no-print border-emerald-200 bg-emerald-50 p-4">
-                <p className="text-sm font-medium text-emerald-900">
+              <div className="panel no-print border-ink p-4">
+                <p className="text-sm font-medium">
                   Saved. Anyone with this link can see the estimate and photos for 30 days.
                 </p>
-                <div className="mt-2 flex gap-2">
+                <div className="mt-3 flex gap-2">
                   <input
                     readOnly
                     className="field font-mono text-xs"
@@ -218,7 +215,7 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
                   />
                   <button
                     type="button"
-                    className="btn shrink-0"
+                    className="btn btn-primary shrink-0"
                     onClick={() => copyLink(share.url)}
                   >
                     {share.copied ? "Copied" : "Copy"}
@@ -227,31 +224,32 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
               </div>
             )}
             {share.status === "failed" && (
-              <p
-                role="alert"
-                className="no-print rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-              >
+              <p role="alert" className="notice notice-error no-print">
                 {share.message}
               </p>
             )}
-            <div className="card no-print p-5">
-              <h2 className="mb-4 text-lg font-semibold">Vehicle</h2>
-              <VehicleFields
-                options={options}
-                onChange={changeOptions}
-                lookup={vinLookup}
-                onLookupChange={setVinLookup}
-              />
-            </div>
+            <section className="panel no-print">
+              <div className="panel-head">
+                <h2 className="panel-title">Vehicle</h2>
+              </div>
+              <div className="p-5">
+                <VehicleFields
+                  options={options}
+                  onChange={changeOptions}
+                  lookup={vinLookup}
+                  onLookupChange={setVinLookup}
+                />
+              </div>
+            </section>
           </EstimateView>
         ) : (
-          <div className="card mx-auto max-w-xl p-6 text-center">
-            <h2 className="text-xl font-semibold">We couldn&apos;t assess that</h2>
+          <div className="panel mx-auto max-w-xl p-8 text-center">
+            <h2 className="text-xl font-semibold tracking-tight">We couldn&apos;t assess that</h2>
             <p className="mt-2 text-sm text-muted">{result.summary}</p>
             <p className="mt-2 text-sm text-muted">
               Try a sharper, closer photo of the damaged area in good light.
             </p>
-            <button type="button" className="btn btn-primary mt-5" onClick={startOver}>
+            <button type="button" className="btn btn-primary mt-6" onClick={startOver}>
               Try other photos
             </button>
           </div>
@@ -261,71 +259,92 @@ export function Estimator({ intro, outro }: { intro?: ReactNode; outro?: ReactNo
   }
 
   return (
-    <div className="space-y-10">
-      {intro}
-      <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
-        <PhotoPicker photos={photos} onChange={setPhotos} />
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-12">
+      <div className="lg:col-start-1 lg:row-start-1 lg:pt-4">{intro}</div>
 
-        <div className="card p-5">
-          <h2 className="mb-4 text-lg font-semibold">About the vehicle</h2>
-          <VehicleFields
-            options={options}
-            onChange={setOptions}
-            lookup={vinLookup}
-            onLookupChange={setVinLookup}
-          />
-        </div>
+      <form
+        onSubmit={submit}
+        className="panel lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start"
+      >
+        <section>
+          <div className="panel-head">
+            <h2 className="panel-title">
+              <span className="mr-2 font-mono text-muted">01</span>Photos of the damage
+            </h2>
+            <span className="text-xs text-muted">
+              {photos.length} of {MAX_PHOTOS}
+            </span>
+          </div>
+          <div className="p-5">
+            <PhotoPicker photos={photos} onChange={setPhotos} />
+          </div>
+        </section>
 
-        {error && (
-          <p
-            role="alert"
-            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-          >
-            {error}
-          </p>
-        )}
+        <section className="border-t border-line">
+          <div className="panel-head">
+            <h2 className="panel-title">
+              <span className="mr-2 font-mono text-muted">02</span>About the vehicle
+            </h2>
+          </div>
+          <div className="p-5">
+            <VehicleFields
+              options={options}
+              onChange={setOptions}
+              lookup={vinLookup}
+              onLookupChange={setVinLookup}
+            />
+          </div>
+        </section>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-full py-3 text-base"
-          disabled={photos.length === 0 || analysing}
-        >
-          {analysing && (
-            <svg
-              className="animate-spin"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="9"
-                stroke="currentColor"
-                strokeOpacity="0.3"
-                strokeWidth="3"
-              />
-              <path
-                d="M21 12a9 9 0 0 0-9-9"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            </svg>
+        <div className="space-y-3 rounded-b-lg border-t border-line bg-paper/60 p-5">
+          {error && (
+            <p role="alert" className="notice notice-error">
+              {error}
+            </p>
           )}
-          {analysing
-            ? `Analysing ${photos.length === 1 ? "your photo" : `${photos.length} photos`}…`
-            : "Get my estimate"}
-        </button>
-        {analysing && (
-          <p className="text-center text-sm text-muted" aria-live="polite">
-            This usually takes 10 to 30 seconds.
+          <button
+            type="submit"
+            className="btn btn-primary h-12 w-full text-base"
+            disabled={photos.length === 0 || analysing}
+          >
+            {analysing && (
+              <svg
+                className="animate-spin"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  strokeOpacity="0.3"
+                  strokeWidth="3"
+                />
+                <path
+                  d="M21 12a9 9 0 0 0-9-9"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+            {analysing
+              ? `Analysing ${photos.length === 1 ? "your photo" : `${photos.length} photos`}…`
+              : "Get my estimate"}
+          </button>
+          <p className="text-center text-xs text-muted" aria-live="polite">
+            {analysing
+              ? "This usually takes 10 to 30 seconds."
+              : "Photos are resized and stripped of location data before analysis."}
           </p>
-        )}
+        </div>
       </form>
-      {outro}
+
+      {outro && <div className="lg:col-start-1 lg:row-start-2">{outro}</div>}
     </div>
   );
 }

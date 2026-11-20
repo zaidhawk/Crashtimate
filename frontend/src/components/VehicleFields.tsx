@@ -112,10 +112,10 @@ export function VehicleFields({ options, onChange, lookup, onLookupChange: setLo
               ))}
             </select>
           </div>
-          <label className="flex items-center gap-2.5 self-end pb-2 text-sm">
+          <label className="flex h-10 cursor-pointer items-center gap-2.5 self-end text-sm">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-accent"
+              className="h-4 w-4 accent-ink"
               checked={options.tier === "luxury"}
               onChange={(event) =>
                 onChange({ ...options, tier: event.target.checked ? "luxury" : "standard" })

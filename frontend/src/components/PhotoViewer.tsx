@@ -42,7 +42,7 @@ export function PhotoViewer({ photos, damages, highlighted, onHighlight }: Props
 
   return (
     <div>
-      <div className="relative mx-auto w-fit overflow-hidden rounded-xl bg-stone-100">
+      <div className="relative mx-auto w-fit overflow-hidden rounded-md bg-paper">
         {/* A plain <img>: the source is a local preview or the API, so there's nothing for
             next/image to optimise, and the overlay needs the image's exact rendered box. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -61,7 +61,7 @@ export function PhotoViewer({ photos, damages, highlighted, onHighlight }: Props
               onMouseLeave={() => onHighlight(null)}
               onFocus={() => onHighlight(index)}
               onBlur={() => onHighlight(null)}
-              className={`absolute rounded-md border-2 transition-shadow ${BOX_COLORS[damage.severity]} ${
+              className={`absolute rounded-sm border-2 transition-shadow ${BOX_COLORS[damage.severity]} ${
                 highlighted === index ? "z-10 shadow-[0_0_0_3px_rgb(255_255_255/0.9)]" : ""
               }`}
               style={{
@@ -72,7 +72,7 @@ export function PhotoViewer({ photos, damages, highlighted, onHighlight }: Props
               }}
             >
               <span
-                className={`absolute -top-px -left-px rounded-br-md rounded-tl-sm px-1.5 py-0.5 text-xs leading-none font-semibold text-white ${SEVERITY_DOT[damage.severity]}`}
+                className={`absolute -top-px -left-px rounded-br-sm px-1.5 py-0.5 font-mono text-xs leading-none font-medium text-white ${SEVERITY_DOT[damage.severity]}`}
               >
                 {index + 1}
               </span>
@@ -95,10 +95,8 @@ export function PhotoViewer({ photos, damages, highlighted, onHighlight }: Props
               onClick={() => setSelected(index)}
               aria-label={`Show photo ${index + 1}`}
               aria-pressed={index === current}
-              className={`h-14 w-20 cursor-pointer overflow-hidden rounded-lg border-2 ${
-                index === current
-                  ? "border-accent"
-                  : "border-transparent opacity-70 hover:opacity-100"
+              className={`h-14 w-20 cursor-pointer overflow-hidden rounded-md border-2 ${
+                index === current ? "border-ink" : "border-transparent opacity-70 hover:opacity-100"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
